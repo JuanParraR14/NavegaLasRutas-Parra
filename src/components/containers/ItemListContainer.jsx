@@ -1,13 +1,46 @@
-function itemListContainer({ greeting }) {
-   return (
-      <section className="container text-center mt-5">
-         <div className="p-5 bg-light rounded-3 shadow-sm">
-            <h2 className="fw-bold mb-3">{greeting}</h2>
-            <p className="text-muted">¡Explora nuestras categorías y encuentra productos increíbles!</p>
-            <button className="btn btn-custom">Ver productos</button>
-         </div>
-      </section>
-   );
-}
+import React, { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
+import { products as mockProducts } from "../../data/products";
+import ItemList from "../presentational/ItemList";
 
-export default itemListContainer
+function fetchProducts() {
+   return new Promise((resolve) => {
+      setTimeout(() => resolve(mockProducts), 600);
+   });
+};
+
+export default function ItemListContainer({ greeting }) {
+   const [items, setItems] = useState([]);
+   const [loading, setLoading] = useState(true);
+   const { categoriaId } = useParams();
+
+   useEffect(() => {
+      setLoading(true);
+      fetchProducts()
+         .then((data) => {
+            if (categoriaId) {
+               const filtered = data.filter(
+                  (p) => p.categoria.toLowerCase() === categoriaId.toLocaleLowerCase()
+               );
+               setItems(filtered);
+            }  else {
+               setItems(data);
+            }
+         })
+      .finally(() => setLoading(false));   
+   }, [categoriaId]);
+
+   return (
+      <div className="container mt-4">
+         <h2 className="mb-4">{greeting}</h2>
+
+         {loading ? (
+         <p>Cargando productos...</p>
+         ) : items.length === 0 ? (
+         <p>No hay productos en esta categoría.</p>
+         ) : (
+         <ItemList items={items} />
+         )}
+      </div>
+   );
+};
